@@ -1,0 +1,32 @@
+// lib/config/routes.dart
+import 'package:flutter/material.dart';
+import 'package:lunchboxx/screens/splash_screen.dart';
+import 'package:lunchboxx/screens/login_screen.dart';
+import 'package:lunchboxx/screens/signup_screen.dart';
+import 'package:lunchboxx/screens/home_screen.dart';
+import 'package:lunchboxx/screens/chef_dashboard.dart';
+
+class AppRoutes {
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/':
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
+      case '/login':
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+      case '/signup':
+        return MaterialPageRoute(builder: (_) => const SignupScreen());
+      case '/home':
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case '/chef-dashboard':
+        return MaterialPageRoute(builder: (_) => const ChefDashboard());
+      default:
+        return MaterialPageRoute(
+          builder: (_) => Scaffold(
+            body: Center(
+              child: Text('No route defined for ${settings.name}'),
+            ),
+          ),
+        );
+    }
+  }
+}
