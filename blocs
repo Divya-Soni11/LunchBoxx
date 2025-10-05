@@ -1,0 +1,145 @@
+// lib/blocs/auth/auth_bloc.dart
+part of 'auth_bloc.dart';
+
+abstract class AuthEvent extends Equatable {
+  const AuthEvent();
+
+  @override
+  List<Object> get props => [];
+}
+
+class AuthCheckRequested extends AuthEvent {}
+
+class AuthLoginRequested extends AuthEvent {
+  final String email;
+  final String password;
+
+  const AuthLoginRequested({required this.email, required this.password});
+
+  @override
+  List<Object> get props => [email, password];
+}
+
+class AuthSignUpRequested extends AuthEvent {
+  final String name;
+  final String email;
+  final String phone;
+  final String password;
+  final String userType;
+
+  const AuthSignUpRequested({
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.password,
+    required this.userType,
+  });
+
+  @override
+  List<Object> get props => [name, email, phone, password, userType];
+}
+
+class AuthLogoutRequested extends AuthEvent {}
+
+abstract class AuthState extends Equatable {
+  const AuthState();
+
+  @override
+  List<Object> get props => [];
+}
+
+class AuthInitial extends AuthState {}
+
+class AuthLoading extends AuthState {}
+
+class AuthAuthenticated extends AuthState {
+  final UserModel user;
+
+  const AuthAuthenticated({required this.user});
+
+  @override
+  List<Object> get props => [user];
+}
+
+class AuthUnauthenticated extends AuthState {}
+
+class AuthError extends AuthState {
+  final String message;
+
+  const AuthError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  final AuthRepository authRepository;
+
+  AuthBloc({required this.authRepository}) : super(AuthInitial()) {
+    on<AuthCheckRequested>(_onAuthCheckRequested);
+    on<AuthLoginRequested>(_onLoginRequested);
+    on<AuthSignUpRequested>(_onSignUpRequested);
+    on<AuthLogoutRequested>(_onLogoutRequested);
+  }
+
+  Future<void> _onAuthCheckRequested(
+    AuthCheckRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final user = await authRepository.getCurrentUser();
+      if (user != null) {
+        emit(AuthAuthenticated(user: user));
+      } else {
+        emit(AuthUnauthenticated());
+      }
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onLoginRequested(
+    AuthLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final user = await authRepository.login(
+        email: event.email,
+        password: event.password,
+      );
+      emit(AuthAuthenticated(user: user));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onSignUpRequested(
+    AuthSignUpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final user = await authRepository.signUp(
+        name: event.name,
+        email: event.email,
+        phone: event.phone,
+        password: event.password,
+        userType: event.userType,
+      );
+      emit(AuthAuthenticated(user: user));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onLogoutRequested(
+    AuthLogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    await authRepository.logout();
+    emit(AuthUnauthenticated());
+  }
+}
